@@ -12,16 +12,16 @@ def load_and_inject_assets():
 
     try:
         # --- 1. АНІМАЦІЇ ГРАВЦЯ ---
-        gl['walk_left'] = [pg.image.load(f"data/images/player/walking/left/{i}.png") for i in range(1, 6)]
-        gl['walk_right'] = [pg.image.load(f"data/images/player/walking/right/{i}.png") for i in range(1, 6)]
-        gl['walk_up'] = [pg.image.load(f"data/images/player/walking/up/{i}.png") for i in range(1, 6)]
-        gl['walk_down'] = [pg.image.load(f"data/images/player/walking/down/{i}.png") for i in range(1, 6)]
-        gl['walk_down_left'] = [pg.image.load(f"data/images/player/walking/down-left/{i}.png") for i in range(1, 6)]
-        gl['walk_down_right'] = [pg.image.load(f"data/images/player/walking/down-right/{i}.png") for i in range(1, 6)]
-        gl['walk_up_left'] = [pg.image.load(f"data/images/player/walking/up-left/{i}.png") for i in range(1, 6)]
-        gl['walk_up_right'] = [pg.image.load(f"data/images/player/walking/up-right/{i}.png") for i in range(1, 6)]
+        gl['walk_left'] = [pg.image.load(f"data/images/player/walking/left/{i}.png") for i in range(1, 7)]
+        gl['walk_right'] = [pg.image.load(f"data/images/player/walking/right/{i}.png") for i in range(1, 7)]
+        gl['walk_up'] = [pg.image.load(f"data/images/player/walking/up/{i}.png") for i in range(1, 7)]
+        gl['walk_down'] = [pg.image.load(f"data/images/player/walking/down/{i}.png") for i in range(1, 7)]
+        gl['walk_down_left'] = [pg.image.load(f"data/images/player/walking/down-left/{i}.png") for i in range(1, 7)]
+        gl['walk_down_right'] = [pg.image.load(f"data/images/player/walking/down-right/{i}.png") for i in range(1, 7)]
+        gl['walk_up_left'] = [pg.image.load(f"data/images/player/walking/up-left/{i}.png") for i in range(1, 7)]
+        gl['walk_up_right'] = [pg.image.load(f"data/images/player/walking/up-right/{i}.png") for i in range(1, 7)]
         
-        gl['die'] = [pg.transform.smoothscale(pg.image.load(f"data/images/player/die/{i}.png"), (29, 54)) for i in range(1, 6)]
+        gl['die'] = [pg.transform.smoothscale(pg.image.load(f"data/images/player/die/{i}.png"), (29, 54)) for i in range(1, 7)]
 
         # --- 2. ЕЛЕМЕНТИ ІНТЕРФЕЙСУ (КНОПКИ ТА МЕНЮ) ---
         gl['play1'] = pg.image.load("data/images/gui/buttons/play.png")

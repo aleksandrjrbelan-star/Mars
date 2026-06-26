@@ -139,7 +139,6 @@ def draw_base_scene():
 def draw_current_location_scene():
     if location == "base":
         home_background.draw(screen)
-        workbench.draw(screen)
         pl.draw(screen)
     else:
         background1.draw(screen, camera_x, camera_y)
@@ -155,7 +154,6 @@ def play_death_animation():
     global game_part, new_day, wt, alpha_nd, location, days
 
     overlay = pg.Surface((WEIGHT, HEIGHT), pg.SRCALPHA)
-    original_image = pl.image.copy()
     days_label_gameover.set_text(f"Прожито {days} днів")
 
     death_frames = getattr(pl, "imgs_die", [])
@@ -182,7 +180,7 @@ def play_death_animation():
         overlay_alpha = min(210, frame * 4)
 
         screen.fill(BLACK)
-        temp_image = original_image.copy()
+        temp_image = pl.image.copy()
         temp_image.set_alpha(player_alpha)
         pl.image = temp_image
 
@@ -192,8 +190,6 @@ def play_death_animation():
         screen.blit(overlay, (0, 0))
         pg.display.flip()
         clock.tick(18)
-
-    pl.image = original_image
     game_part = "game_over"
     pl.hp = pl.hp_max
     pl.o2 = pl.o2_max
@@ -271,7 +267,7 @@ CRAFT_RECIPES = {
     },
     "food": {
         "title": "Їжа",
-        "cost": {"stone": 1, "gips": [1,'Гіпс']},
+        "cost": {"stone": [1,'Камінь'], "gips": [1,'Гіпс']},
         "single": False
     },
     "medkit": {
@@ -285,7 +281,8 @@ def can_craft_recipe(player, recipe_key):
     recipe = CRAFT_RECIPES[recipe_key]
     if recipe["single"] and player.items[recipe_key] >= 1:
         return False
-    for resource, amount in recipe["cost"].items():
+    for resource, cost_data in recipe["cost"].items():
+        amount = cost_data[0] if isinstance(cost_data, list) else cost_data
         if player.resources.get(resource, 0) < amount:
             return False
     return True
@@ -295,7 +292,8 @@ def craft_recipe(player, recipe_key):
         return False
 
     recipe = CRAFT_RECIPES[recipe_key]
-    for resource, amount, name in recipe["cost"].items():
+    for resource, cost_data in recipe["cost"].items():
+        amount = cost_data[0] if isinstance(cost_data, list) else cost_data
         player.resources[resource] -= amount
     player.items[recipe_key] += 1
     return True
@@ -375,10 +373,18 @@ def open_workbench_menu(player):
                 pg.draw.rect(screen, (210, 170, 80), button.rect, 2, border_radius=4)
 
         y = 210
-        for resource, amount in recipe["cost"].items():
+        for resource, cost_data in recipe["cost"].items():
+            if isinstance(cost_data, list):
+                amount = cost_data[0]
+                resource_name = cost_data[1]
+            else:
+                amount = cost_data
+                resource_name = resource
+
             owned = player.resources.get(resource, 0)
             color = WHITE if owned >= amount else RED
-            TextLabel(440, y, 24, color, f"{resource}: {owned}/{amount}", font_pixel).draw(screen)
+            
+            TextLabel(440, y, 24, color, f"{resource_name}: {owned}/{amount}", font_pixel).draw(screen)
             y += 38
 
         if recipe["single"]:
@@ -663,6 +669,8 @@ class Player(Sprite):
         self.items = {"improved_o2_tank": 0, "food": 0, "medkit": 0}
         super().__init__(x, y, imgs_base[0])
     def update(self,rects):
+        if self.hp <= 0:
+            return "dead"
         self.pickaxe_rect.x = self.rect.x
         self.pickaxe_rect.y = self.rect.y
         keys = pg.key.get_pressed()
@@ -1046,7 +1054,7 @@ def apply_display_mode():
 
 apply_display_mode()
 pg.display.set_caption("Mars")
-# display.set_icon()
+pg.display.set_icon(pg.image.load("data/images/gui/icons/icon.ico"))
 exit_rect = Teleport(398,401,pg.Surface((144,54)),'basic')
 music_loud = settings_data.get("music_loud", 0.50)
 sounds_loud = settings_data.get("sounds_loud", 0.50)
@@ -1401,6 +1409,12 @@ def game():
             open_pause_menu()
             if game_part != "game":
                 return
+        if event.type == pg.KEYDOWN and event.key == pg.K_BACKQUOTE:
+            try:
+                open_console()
+            except Exception as e:
+                print(f"Помилка відкриття консолі: {e}")
+
 
     screen.fill(BLACK)
     if new_day:
@@ -1417,6 +1431,7 @@ def game():
             new_day_bg.image.set_alpha(alpha_nd)
             days_label.image.set_alpha(alpha_nd)
             new_day_bg.draw(screen, 0, 0)
+            days_label.set_text(f"День №{days}")
             days_label.draw(screen)
             if alpha_nd <= 0:
                 new_day = False
