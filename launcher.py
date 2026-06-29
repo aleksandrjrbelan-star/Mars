@@ -3,6 +3,10 @@ from tkinter import messagebox
 from PIL import Image
 import subprocess
 import sys
+from data.settings.settings import load_settings, save_settings
+
+settings_data = load_settings()
+lang = settings_data.get("lang", "eng")
 
 window = CTk()
 window.title("Mars")
@@ -21,7 +25,7 @@ gui_frame.place(x=0, y=498)
 close_image = Image.open("data/images/gui/buttons/close 1.png")
 close = CTkImage(close_image, size=(90, 90))
 close_button = CTkButton(window, image=close, text="", width=90, height=90, command=window.destroy,bg_color='blue', fg_color='blue')
-close_button.place(x=497, y=501)
+close_button.place(x=489, y=501)
 
 
 
@@ -57,9 +61,14 @@ def start_game():
             messagebox.showwarning("Попередження", "Будь ласка, оберіть режим гри.")
     except Exception as e:
         messagebox.showerror("Помилка", f"Сталася помилка при запуску гри:\n{e}")
+
+profile_button = CTkButton(window, bg_color="blue", text="Profile", font=CTkFont(size=18, weight="bold"), width=180, height=45)
+
+profile_button.place(x=270,y=504)
 start_button = CTkButton(window,bg_color="blue", text="Start", font=CTkFont(size=30, weight="bold"), width=250, height=63, command=start_game)
-
 start_button.place(x=6, y=533)
-
+if lang == "ua":
+    profile_button.configure(text="Профіль")
+    start_button.configure(text="Запуск гри")
 
 window.mainloop()

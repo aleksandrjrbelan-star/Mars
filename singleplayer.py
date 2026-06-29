@@ -5,6 +5,7 @@ import os
 from random import randint, uniform
 from data.config import *
 import data.modules.imports as impt
+from data.settings.settings import load_settings, save_settings
 
 difficulty_settings = {
     "easy": {"o2_loss_speed": 0.055, "o2_recovery_speed": 0.1, "hunger_loss_speed": 0.005, "minerals_per_day": 42,"o2_hp_loss_speed": 0.05, "hunger_hp_loss_speed": 0.02},
@@ -17,6 +18,7 @@ pg.mixer.init()
 # --- Функції ---
 fade_surface = pg.Surface((WEIGHT, HEIGHT))
 fade_surface.fill(BLACK)
+is_transitioning = False
 last_menu_track = None
 menu_music = [
     "data/sounds/bg_music/bg_menu1.mp3",
@@ -24,44 +26,9 @@ menu_music = [
     "data/sounds/bg_music/bg_menu3.mp3",
     "data/sounds/bg_music/bg_menu4.ogg",
 ]
-SETTINGS_PATH = "data/settings/settings.json"
 
 
-def load_settings():
-    default_settings = {
-        "difficult": "none",
-        "music_loud": 0.50,
-        "sounds_loud": 0.50,
-        'portrait': "none",
-        "fullscreen": False,
-    }
 
-    if not os.path.exists(SETTINGS_PATH):
-        return default_settings
-
-    try:
-        with open(SETTINGS_PATH, "r", encoding="utf-8") as file:
-            content = file.read().strip()
-            if not content:
-                return default_settings
-            data = json.loads(content)
-            if not isinstance(data, dict):
-                return default_settings
-    except (json.JSONDecodeError, OSError):
-        return default_settings
-
-    default_settings.update(data)
-    return default_settings
-
-def save_settings():
-    settings_data["music_loud"] = round(music_loud, 2)
-    settings_data["sounds_loud"] = round(sounds_loud, 2)
-    settings_data["fullscreen"] = is_fullscreen
-    settings_data["difficult"] = selected_difficulty
-    settings_data["portrait"] = selected_portrait
-
-    with open(SETTINGS_PATH, "w", encoding="utf-8") as file:
-        json.dump(settings_data, file)
 
 def make_save():
     pass
@@ -94,20 +61,31 @@ def play_random_menu_music():
     pg.mixer.music.play()
 
 def fade_to_black(draw_scene, no=False):
-    global fade_surface
+    global fade_surface, is_transitioning
+    is_transitioning = True
     fade_surface.fill(BLACK)
+    draw_scene()
+    scene_snapshot = screen.copy()
     for alpha in range(0, 255, 5):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
         fade_surface.set_alpha(alpha)
-        draw_scene()
+        screen.blit(scene_snapshot, (0, 0))
         screen.blit(fade_surface, (0, 0))
         pg.display.flip()
         pg.time.delay(30)
         clock.tick(FPS)
 
 def fade_from_black(draw_scene):
-    global game_part, fade_surface
+    global game_part, fade_surface, is_transitioning
     fade_surface.fill(BLACK)
     for alpha in range(255, -1, -5):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
         draw_scene()
         fade_surface.set_alpha(alpha)
         screen.blit(fade_surface, (0, 0))
@@ -115,6 +93,7 @@ def fade_from_black(draw_scene):
         pg.display.flip()
         clock.tick(FPS)
         pg.time.delay(30)
+    is_transitioning = False
 
 def draw_menu_scene():
     draw_menu_background()
@@ -124,6 +103,9 @@ def draw_menu_scene():
 def draw_game_scene():
     screen.fill(BLACK)
     if new_day:
+        days_label.set_text(f"Day {days}")
+        new_day_bg.image.set_alpha(255)
+        days_label.image.set_alpha(255)
         new_day_bg.draw(screen, 0, 0)
         days_label.draw(screen)
     else:
@@ -490,16 +472,19 @@ class Sleep(Sprite):
         self.location = location
         super().__init__(x,y,image)
     def update(self,player):
-        global days, new_day
+        global days, new_day, wt, alpha_nd
         if self.rect.colliderect(player):
-            fade_to_black(draw_base_scene)
             player.rect.x = 1200
             player.rect.y = 1200
             days += 1
             new_day = True
+            wt = 0
+            alpha_nd = 255
             player.sleep = 100
+            days_label.set_text(f"Day {days}")
+            new_day_bg.image.set_alpha(255)
+            days_label.image.set_alpha(255)
             return self.location
-            fade_from_black(draw_game_scene)
         return None
 
 class TextLabel:
@@ -561,6 +546,12 @@ class Button:
         self.resize = resize
 
     def update(self):
+        if is_transitioning:
+            return
+        if not pg.mouse.get_focused():
+            self.image = self.image_inactive
+            self.hovered = False
+            return
         x, y = pg.mouse.get_pos()
         collision = self.base_rect.collidepoint(x, y)
         if collision:
@@ -1281,15 +1272,12 @@ def open_new_game_menu():
                 exit()
             if event.type == MUSIC_END:
                 play_random_menu_music()
-        female_portrait.update()
-        male_portrait.update()
         diff_easy.update()
         diff_medium.update()
         diff_hard.update()
         update_menu_background()
         female_portrait.update()
         male_portrait.update()
-        diff_easy.update()
         landing.update()
         back_btn.onclick(close_menu)
         back_btn.update()
@@ -1356,7 +1344,6 @@ def menu():
     exit_btn.onclick(on_exit)
     settings_btn.onclick(settings)
 
-    play_btn.update()
     exit_btn.update()
     settings_btn.update()
     update_menu_background()
@@ -1366,6 +1353,7 @@ def menu():
     draw_menu_background()
     for s in sprites:
             s.draw(screen)
+    play_btn.update()
 
     pg.display.flip()
     clock.tick(FPS)
@@ -1418,7 +1406,15 @@ def game():
 
     screen.fill(BLACK)
     if new_day:
-        if pl.items['food'] > 0:
+        days_label.set_text(f"Day {days}")
+        new_day_bg.image.set_alpha(255)
+        days_label.image.set_alpha(255)
+        if wt == 0 and pl.items['food'] > 0:
+            pl.items['food'] -= 1
+            pl.hunger += 50
+            if pl.hunger > 100:
+                pl.hunger = 100
+        if wt == 0 and pl.items[''] > 0:
             pl.items['food'] -= 1
             pl.hunger += 50
             if pl.hunger > 100:
@@ -1428,15 +1424,17 @@ def game():
             pl.rect.x = 1200
             pl.rect.y = 1200
             pl.draw(screen, camera_x, camera_y)
+            days_label.set_text(f"Day {days}")
             new_day_bg.image.set_alpha(alpha_nd)
             days_label.image.set_alpha(alpha_nd)
             new_day_bg.draw(screen, 0, 0)
-            days_label.set_text(f"День №{days}")
             days_label.draw(screen)
             if alpha_nd <= 0:
                 new_day = False
                 wt = 0
                 alpha_nd = 255
+                new_day_bg.image.set_alpha(255)
+                days_label.image.set_alpha(255)
             else:
                 alpha_nd -= 5
         elif wt == 0:
@@ -1451,6 +1449,8 @@ def game():
                 )
                 actv_minerals.append(new_mineral)
             wt += 1
+            new_day_bg.draw(screen, 0, 0)
+            days_label.draw(screen)
         else:
             wt += 1
             new_day_bg.draw(screen, 0, 0)
@@ -1500,9 +1500,13 @@ def game():
         sleep_bare.update(sleep_bare_width,200)
         hunger_bare.update(hunger_bare_width,200)
         pl.update([left_wall,right_wall,up_wall,down_wall])
-        nd = sleep_bed.update(pl)
-        if nd != None:
-            location = nd
+        if sleep_bed.rect.colliderect(pl):
+            fade_to_black(draw_base_scene)
+            nd = sleep_bed.update(pl)
+            if nd != None:
+                location = nd
+            fade_from_black(draw_game_scene)
+            return
         nd = exit_rect.update(pl)
         if nd != None:
             location = nd

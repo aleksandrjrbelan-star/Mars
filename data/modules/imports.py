@@ -21,7 +21,8 @@ def load_and_inject_assets():
         gl['walk_up_left'] = [pg.image.load(f"data/images/player/walking/up-left/{i}.png") for i in range(1, 7)]
         gl['walk_up_right'] = [pg.image.load(f"data/images/player/walking/up-right/{i}.png") for i in range(1, 7)]
         
-        gl['die'] = [pg.transform.smoothscale(pg.image.load(f"data/images/player/die/{i}.png"), (29, 54)) for i in range(1, 7)]
+        gl['die'] = [pg.transform.smoothscale(pg.image.load(f"data/images/player/die/{i}.png"), (29, 54)) for i in range(1, 6)]
+        gl['die'].append(pg.transform.smoothscale(pg.image.load("data/images/player/die/6.png"), (65, 55)))
 
         # --- 2. ЕЛЕМЕНТИ ІНТЕРФЕЙСУ (КНОПКИ ТА МЕНЮ) ---
         gl['play1'] = pg.image.load("data/images/gui/buttons/play.png")
