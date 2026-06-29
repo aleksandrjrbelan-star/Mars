@@ -21,6 +21,6 @@ game_part = "menu"
 sound_loud = 1.0
 FPS = 60
 WEIGHT, HEIGHT = 900, 600
-
+SETTINGS_PATH = "data/settings/settings.json"
 
 # ------

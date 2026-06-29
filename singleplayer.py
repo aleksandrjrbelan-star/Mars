@@ -5,6 +5,7 @@ import os
 from random import randint, uniform
 from data.config import *
 import data.modules.imports as impt
+from data.settings.settings import load_settings, save_settings
 
 difficulty_settings = {
     "easy": {"o2_loss_speed": 0.055, "o2_recovery_speed": 0.1, "hunger_loss_speed": 0.005, "minerals_per_day": 42,"o2_hp_loss_speed": 0.05, "hunger_hp_loss_speed": 0.02},
@@ -25,44 +26,9 @@ menu_music = [
     "data/sounds/bg_music/bg_menu3.mp3",
     "data/sounds/bg_music/bg_menu4.ogg",
 ]
-SETTINGS_PATH = "data/settings/settings.json"
 
 
-def load_settings():
-    default_settings = {
-        "difficult": "none",
-        "music_loud": 0.50,
-        "sounds_loud": 0.50,
-        'portrait': "none",
-        "fullscreen": False,
-    }
 
-    if not os.path.exists(SETTINGS_PATH):
-        return default_settings
-
-    try:
-        with open(SETTINGS_PATH, "r", encoding="utf-8") as file:
-            content = file.read().strip()
-            if not content:
-                return default_settings
-            data = json.loads(content)
-            if not isinstance(data, dict):
-                return default_settings
-    except (json.JSONDecodeError, OSError):
-        return default_settings
-
-    default_settings.update(data)
-    return default_settings
-
-def save_settings():
-    settings_data["music_loud"] = round(music_loud, 2)
-    settings_data["sounds_loud"] = round(sounds_loud, 2)
-    settings_data["fullscreen"] = is_fullscreen
-    settings_data["difficult"] = selected_difficulty
-    settings_data["portrait"] = selected_portrait
-
-    with open(SETTINGS_PATH, "w", encoding="utf-8") as file:
-        json.dump(settings_data, file)
 
 def make_save():
     pass
