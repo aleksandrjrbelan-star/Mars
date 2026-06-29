@@ -21,7 +21,7 @@ gui_frame.place(x=0, y=498)
 close_image = Image.open("data/images/gui/buttons/close 1.png")
 close = CTkImage(close_image, size=(90, 90))
 close_button = CTkButton(window, image=close, text="", width=90, height=90, command=window.destroy,bg_color='blue', fg_color='blue')
-close_button.place(x=497, y=501)
+close_button.place(x=489, y=501)
 
 
 
@@ -57,8 +57,10 @@ def start_game():
             messagebox.showwarning("Попередження", "Будь ласка, оберіть режим гри.")
     except Exception as e:
         messagebox.showerror("Помилка", f"Сталася помилка при запуску гри:\n{e}")
-start_button = CTkButton(window,bg_color="blue", text="Start", font=CTkFont(size=30, weight="bold"), width=250, height=63, command=start_game)
 
+
+
+start_button = CTkButton(window,bg_color="blue", text="Start", font=CTkFont(size=30, weight="bold"), width=250, height=63, command=start_game)
 start_button.place(x=6, y=533)
 
 
